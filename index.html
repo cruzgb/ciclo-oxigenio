@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo - Ciclo do Oxigênio</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #e0f7fa;
+      margin: 0;
+      padding: 0;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.253);
+    }
+    
+    .tela {
+      display: none;
+      padding: 40px;
+    }
+
+    .ativo {
+      display: block;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 8px;
+      border: none;
+      background: #00796b;
+      color: white;
+      box-shadow: 1px 2px 2px rgba(0, 0, 0, 0.507);
+    }
+
+    button:hover {
+      background: #004d40;
+    }
+
+    .ordem span, .associar span, .multi span, .drag {
+      display: inline-block;
+      background: #fff;
+      border: 1px solid #333;
+      padding: 10px;
+      margin: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .associar {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .coluna {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    /* Fase 5 */
+    .dropzone {
+      display: inline-block;
+      width: 120px;
+      height: 120px;
+      margin: 20px;
+      border: 2px dashed #333;
+      border-radius: 10px;
+      vertical-align: middle;
+      line-height: 120px;
+      font-size: 14px;
+      background: #f5f5f5;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Tela inicial -->
+  <div id="inicio" class="tela ativo">
+    <h1>🌿 Jogo do Ciclo do Oxigênio 🌍</h1>
+    <p>Clique no botão abaixo para começar!</p>
+    <button onclick="mostrarTela('fase1')">Começar</button>
+  </div>
+
+  <!-- Fase 1: Quiz -->
+  <div id="fase1" class="tela">
+    <h2>Fase 1: Quiz</h2>
+    <p>Quem libera oxigênio para a atmosfera?</p>
+    <button onclick="respostaQuiz(true)">🌱 Plantas</button>
+    <button onclick="respostaQuiz(false)">🐶 Animais</button>
+    <p id="feedbackF1"></p>
+  </div>
+
+  <!-- Fase 2: Ordem -->
+  <div id="fase2" class="tela">
+    <h2>Fase 2: Clique na ordem correta</h2>
+    <p>Monte o ciclo do oxigênio:</p>
+    <div class="ordem">
+      <span onclick="verificarOrdem(this)">🌱 Planta</span>
+      <span onclick="verificarOrdem(this)">🌞 Sol</span>
+      <span onclick="verificarOrdem(this)">🐶 Animal</span>
+    </div>
+    <p id="feedback"></p>
+  </div>
+
+  <!-- Fase 3: Associação -->
+  <div id="fase3" class="tela">
+    <h2>Fase 3: Associe corretamente</h2>
+    <p>Clique primeiro no processo e depois no significado correto:</p>
+    <div class="associar">
+      <div class="coluna" id="processos">
+        <span onclick="selecionar(this, 'processo')">🌞 Fotossíntese</span>
+        <span onclick="selecionar(this, 'processo')">😮 Respiração</span>
+      </div>
+      <div class="coluna" id="significados">
+        <span onclick="selecionar(this, 'significado')">Produz oxigênio</span>
+        <span onclick="selecionar(this, 'significado')">Consome oxigênio</span>
+      </div>
+    </div>
+    <p id="feedbackF3"></p>
+  </div>
+
+  <!-- Fase 4: Múltipla escolha -->
+  <div id="fase4" class="tela">
+    <h2>Fase 4: Escolha as respostas corretas</h2>
+    <p>Quais desses fatores produzem oxigênio?</p>
+    <div class="multi">
+      <span onclick="toggleOpcao(this, true)">🌳 Florestas</span>
+      <span onclick="toggleOpcao(this, true)">💧 Água</span>
+      <span onclick="toggleOpcao(this, false)">💎 Minerais</span>
+      <span onclick="toggleOpcao(this, false)">🪨 Rochas</span>
+      <span onclick="toggleOpcao(this, false)">🔥 Fogo</span>
+    </div>
+    <button onclick="verificarMulti()">Confirmar</button>
+    <p id="feedbackF4"></p>
+  </div>
+
+  <!-- Fase 5: Arrasta e solta -->
+  <div id="fase5" class="tela">
+    <h2>Fase 5: Complete o ciclo!</h2>
+    <p>Arraste cada elemento para o lugar correto:</p>
+    <div>
+      <div class="dropzone" data-accept="🌞 Sol">Sol</div>
+      <div class="dropzone" data-accept="🌱 Planta">Planta</div>
+      <div class="dropzone" data-accept="🐶 Animal">Animal</div>
+    </div>
+    <div>
+      <span class="drag" draggable="true">🌱 Planta</span>
+      <span class="drag" draggable="true">🐶 Animal</span>
+      <span class="drag" draggable="true">🌞 Sol</span>
+    </div>
+    <p id="feedbackF5"></p>
+  </div>
+
+  <!-- Tela final -->
+  <div id="final" class="tela">
+    <h2>🎉 Parabéns!</h2>
+    <p>Você completou o ciclo do oxigênio!</p>
+  </div>
+
+  <script>
+    function mostrarTela(id) {
+      document.querySelectorAll(".tela").forEach(t => t.classList.remove("ativo"));
+      document.getElementById(id).classList.add("ativo");
+    }
+
+    // Fase 1: Quiz
+    function respostaQuiz(correto) {
+      let feedback = document.getElementById("feedbackF1");
+      if (correto) {
+        feedback.innerText = "✅ Correto! As plantas liberam oxigênio.";
+        setTimeout(() => mostrarTela("fase2"), 1500);
+      } else {
+        feedback.innerText = "❌ Errado! Tente novamente.";
+      }
+    }
+
+    // Fase 2: Ordem
+    let ordemCorreta = ["🌞 Sol", "🌱 Planta", "🐶 Animal"];
+    let progresso = [];
+
+    function verificarOrdem(el) {
+      let escolha = el.innerText;
+      let passo = ordemCorreta[progresso.length];
+
+      if (escolha === passo) {
+        progresso.push(escolha);
+        el.style.background = "#a5d6a7"; // verde claro
+        if (progresso.length === ordemCorreta.length) {
+          document.getElementById("feedback").innerText = "✅ Você completou o ciclo!";
+          setTimeout(() => mostrarTela("fase3"), 1500);
+        }
+      } else {
+        document.getElementById("feedback").innerText = "❌ Ordem errada! Recomece.";
+        progresso = [];
+        document.querySelectorAll(".ordem span").forEach(s => s.style.background = "#fff");
+      }
+    }
+
+    // Fase 3: Associação
+    let selecao = { processo: null, significado: null };
+    let paresCorretos = {
+      "🌞 Fotossíntese": "Produz oxigênio",
+      "😮 Respiração": "Consome oxigênio"
+    };
+    let acertos = 0;
+
+    function selecionar(el, tipo) {
+      selecao[tipo] = el.innerText;
+      el.style.background = "#ffe082"; // amarelo claro
+
+      if (selecao.processo && selecao.significado) {
+        if (paresCorretos[selecao.processo] === selecao.significado) {
+          document.getElementById("feedbackF3").innerText = "✅ Correto!";
+          el.style.background = "#a5d6a7"; // verde claro
+          acertos++;
+          if (acertos === 2) {
+            setTimeout(() => mostrarTela("fase4"), 1500);
+          }
+        } else {
+          document.getElementById("feedbackF3").innerText = "❌ Tente novamente.";
+        }
+        selecao = { processo: null, significado: null };
+      }
+    }
+
+    // Fase 4: Múltipla escolha
+    let respostasF4 = new Map();
+    let corretasF4 = ["🌳 Florestas", "💧 Água"];
+
+    function toggleOpcao(el, valorCorreto) {
+      if (el.style.background === "lightblue") {
+        el.style.background = "#fff";
+        respostasF4.delete(el.innerText);
+      } else {
+        el.style.background = "lightblue";
+        respostasF4.set(el.innerText, valorCorreto);
+      }
+    }
+
+    function verificarMulti() {
+      let todasCorretas = true;
+      for (let correta of corretasF4) {
+        if (!respostasF4.has(correta)) {
+          todasCorretas = false;
+        }
+      }
+      for (let [resp, certo] of respostasF4.entries()) {
+        if (!certo) {
+          todasCorretas = false;
+        }
+      }
+
+      if (todasCorretas) {
+        document.getElementById("feedbackF4").innerText = "✅ Muito bem!";
+        setTimeout(() => mostrarTela("fase5"), 1500);
+      } else {
+        document.getElementById("feedbackF4").innerText = "❌ Errado! Tente novamente.";
+      }
+    }
+
+    // Fase 5: Drag and Drop
+    let dragged = null;
+    let colocados = 0;
+
+    document.addEventListener("dragstart", function(e) {
+      if (e.target.classList.contains("drag")) {
+        dragged = e.target;
+      }
+    });
+
+    document.addEventListener("dragover", function(e) {
+      if (e.target.classList.contains("dropzone")) {
+        e.preventDefault();
+      }
+    });
+
+    document.addEventListener("drop", function(e) {
+      if (e.target.classList.contains("dropzone")) {
+        e.preventDefault();
+        if (dragged.innerText === e.target.dataset.accept) {
+          e.target.innerText = dragged.innerText;
+          e.target.style.background = "#a5d6a7"; // verde
+          dragged.remove();
+          colocados++;
+          if (colocados === 3) {
+            document.getElementById("feedbackF5").innerText = "✅ Você completou o ciclo!";
+            setTimeout(() => mostrarTela("final"), 1500);
+          }
+        } else {
+          document.getElementById("feedbackF5").innerText = "❌ Lugar errado, tente de novo!";
+        }
+      }
+    });
+  </script>
+</body>
+</html>
